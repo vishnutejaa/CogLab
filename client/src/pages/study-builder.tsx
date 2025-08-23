@@ -4,11 +4,16 @@ import { useLocation, useRoute } from "wouter";
 import { queryClient } from "@/lib/queryClient";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Eye, Save, Share } from "lucide-react";
+import { ArrowLeft, Eye, Save, Share, Bot, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import ExperimentCanvas from "@/components/experiment-canvas";
 import ComponentPalette from "@/components/component-palette";
 import PropertiesPanel from "@/components/properties-panel";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ExperimentBlock {
   id: string;
@@ -33,6 +38,21 @@ export default function StudyBuilder() {
   const [selectedBlock, setSelectedBlock] = useState<ExperimentBlock | null>(null);
   const [experimentBlocks, setExperimentBlocks] = useState<ExperimentBlock[]>([]);
   const [studyTitle, setStudyTitle] = useState("New Study");
+  const [showAIDialog, setShowAIDialog] = useState(false);
+  const [showAISurveyDialog, setShowAISurveyDialog] = useState(false);
+  const [aiForm, setAIForm] = useState({
+    taskType: '',
+    title: '',
+    customRequirements: '',
+    estimatedDuration: 15,
+    imageCount: 4
+  });
+  const [aiSurveyForm, setAISurveyForm] = useState({
+    surveyType: '',
+    topic: '',
+    questionCount: 5,
+    customRequirements: ''
+  });
 
   const studyId = params?.id;
   const isEditing = !!studyId;
@@ -53,7 +73,6 @@ export default function StudyBuilder() {
       const defaultBlocks: ExperimentBlock[] = [
         { id: "consent", type: "consent", title: "Consent Form" },
         { id: "demographics", type: "demographics", title: "Demographics" },
-        { id: "instructions", type: "instructions", title: "Instructions" },
         { id: "debrief", type: "debrief", title: "Debrief" }
       ];
       setExperimentBlocks(defaultBlocks);
@@ -149,18 +168,166 @@ export default function StudyBuilder() {
     }
   };
 
+  const generateAIExperiment = useMutation({
+    mutationFn: async (formData: typeof aiForm) => {
+      return apiRequest("POST", "/api/experiments/generate", formData);
+    },
+    onSuccess: async (response) => {
+      const data = await response.json();
+      // Find the AI-generated task block and add it to existing blocks
+      const aiTaskBlock = data.experimentBlocks.find((block: any) => 
+        block.type === aiForm.taskType
+      );
+      
+      if (aiTaskBlock) {
+        // Insert the AI-generated task block before the debrief block
+        setExperimentBlocks(prev => {
+          const debriefIndex = prev.findIndex(block => block.type === 'debrief');
+          if (debriefIndex !== -1) {
+            // Insert before debrief
+            const newBlocks = [...prev];
+            newBlocks.splice(debriefIndex, 0, aiTaskBlock);
+            return newBlocks;
+          } else {
+            // No debrief found, add to end
+            return [...prev, aiTaskBlock];
+          }
+        });
+      }
+      
+      setShowAIDialog(false);
+      toast({
+        title: "AI Task Generated!",
+        description: `${aiForm.taskType.charAt(0).toUpperCase() + aiForm.taskType.slice(1)} task added to your experiment.`
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Generation Failed",
+        description: "Could not generate AI experiment. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
+  const generateAISurvey = useMutation({
+    mutationFn: async (formData: typeof aiSurveyForm) => {
+      return apiRequest("POST", "/api/surveys/generate", formData);
+    },
+    onSuccess: async (response) => {
+      const data = await response.json();
+      
+      // Create a survey block with AI-generated questions
+      const aiSurveyBlock: ExperimentBlock = {
+        id: `ai_survey_${Date.now()}`,
+        type: "survey",
+        title: `AI Survey: ${aiSurveyForm.topic}`,
+        questions: data.questions,
+        surveyType: data.surveyType,
+        topic: data.topic
+      };
+      
+      // Insert the AI-generated survey block before the debrief block
+      setExperimentBlocks(prev => {
+        const debriefIndex = prev.findIndex(block => block.type === 'debrief');
+        if (debriefIndex !== -1) {
+          // Insert before debrief
+          const newBlocks = [...prev];
+          newBlocks.splice(debriefIndex, 0, aiSurveyBlock);
+          return newBlocks;
+        } else {
+          // No debrief found, add to end
+          return [...prev, aiSurveyBlock];
+        }
+      });
+      
+      setShowAISurveyDialog(false);
+      toast({
+        title: "AI Survey Generated!",
+        description: `Survey with ${data.questionCount} questions added to your experiment.`
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Generation Failed",
+        description: "Could not generate AI survey. Please try again.",
+        variant: "destructive"
+      });
+    }
+  });
+
   const addBlock = (blockType: string) => {
+    // Handle AI experiment types
+    if (blockType === 'ai_stroop') {
+      setAIForm({ ...aiForm, taskType: 'stroop', title: 'AI Stroop Experiment' });
+      setShowAIDialog(true);
+      return;
+    }
+    if (blockType === 'ai_memory') {
+      setAIForm({ ...aiForm, taskType: 'image_recall', title: 'AI Memory Experiment' });
+      setShowAIDialog(true);
+      return;
+    }
+    if (blockType === 'ai_survey') {
+      setAISurveyForm({ ...aiSurveyForm, surveyType: 'mixed', topic: 'Research Experience' });
+      setShowAISurveyDialog(true);
+      return;
+    }
+    
     const newBlock: ExperimentBlock = {
       id: `${blockType}_${Date.now()}`,
       type: blockType,
       title: blockType.charAt(0).toUpperCase() + blockType.slice(1),
       // Add default properties based on block type
       ...(blockType === "stroop" && { trials: 60, duration: 5000, randomize: true }),
-      ...(blockType === "image_recall" && { images: 20, studyTime: 3000, recallTime: 10000 }),
+      ...(blockType === "image_recall" && { images: 5, studyTime: 4000, recallTime: 10000 }),
       ...(blockType === "survey" && { questions: [] }),
+      ...(blockType === "mcq" && { 
+        questions: [
+          {
+            id: "q1",
+            type: "multiple_choice",
+            question: "What is your preferred learning style?",
+            options: ["Visual", "Auditory", "Reading/Writing", "Kinesthetic"]
+          }
+        ]
+      }),
+      ...(blockType === "likert" && { 
+        questions: [
+          {
+            id: "q1",
+            type: "likert",
+            question: "I find this experiment engaging",
+            scale: {
+              min: 1,
+              max: 7,
+              labels: ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neutral", "Somewhat Agree", "Agree", "Strongly Agree"]
+            }
+          }
+        ]
+      }),
+      ...(blockType === "openended" && { 
+        questions: [
+          {
+            id: "q1",
+            type: "open_ended",
+            question: "Please describe your experience with this type of research study."
+          }
+        ]
+      }),
     };
     
-    setExperimentBlocks([...experimentBlocks, newBlock]);
+    // Insert the new block before the debrief block
+    const debriefIndex = experimentBlocks.findIndex(block => block.type === 'debrief');
+    if (debriefIndex !== -1) {
+      // Insert before debrief
+      const newBlocks = [...experimentBlocks];
+      newBlocks.splice(debriefIndex, 0, newBlock);
+      setExperimentBlocks(newBlocks);
+    } else {
+      // No debrief found, add to end
+      setExperimentBlocks([...experimentBlocks, newBlock]);
+    }
   };
 
   const updateBlock = (blockId: string, updates: Partial<ExperimentBlock>) => {
@@ -209,6 +376,165 @@ export default function StudyBuilder() {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <Dialog open={showAIDialog} onOpenChange={setShowAIDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="px-4 py-2 text-cyan-700 bg-cyan-50 border-cyan-200 rounded-lg hover:bg-cyan-100"
+                    data-testid="button-ai-generate"
+                  >
+                    <Bot className="h-4 w-4 mr-2" />
+                    AI Generate
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Bot className="h-5 w-5 text-cyan-500" />
+                      Generate AI Experiment
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="taskType">Task Type</Label>
+                      <Select value={aiForm.taskType} onValueChange={(value) => setAIForm({ ...aiForm, taskType: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose experiment type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="stroop">Stroop Task</SelectItem>
+                          <SelectItem value="image_recall">Image Recall Task</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Study Title</Label>
+                      <Input
+                        value={aiForm.title}
+                        onChange={(e) => setAIForm({ ...aiForm, title: e.target.value })}
+                        placeholder="Enter study title"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="duration">Estimated Duration (minutes)</Label>
+                      <Input
+                        type="number"
+                        value={aiForm.estimatedDuration}
+                        onChange={(e) => setAIForm({ ...aiForm, estimatedDuration: e.target.value === '' ? 15 : parseInt(e.target.value) || 15 })}
+                        placeholder="15"
+                      />
+                    </div>
+                    {aiForm.taskType === 'image_recall' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="imageCount">Number of Images</Label>
+                        <Input
+                          type="number"
+                          value={aiForm.imageCount}
+                          onChange={(e) => setAIForm({ ...aiForm, imageCount: e.target.value === '' ? 4 : parseInt(e.target.value) || 4 })}
+                          min="1"
+                          max="20"
+                          placeholder="4"
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="requirements">Custom Requirements (optional)</Label>
+                      <Textarea
+                        value={aiForm.customRequirements}
+                        onChange={(e) => setAIForm({ ...aiForm, customRequirements: e.target.value })}
+                        placeholder="Describe any specific requirements for your experiment..."
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setShowAIDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => generateAIExperiment.mutate(aiForm)}
+                        disabled={!aiForm.taskType || !aiForm.title || generateAIExperiment.isPending}
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                      >
+                        {generateAIExperiment.isPending ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
+                        ) : (
+                          <><Bot className="h-4 w-4 mr-2" /> Generate</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+              <Dialog open={showAISurveyDialog} onOpenChange={setShowAISurveyDialog}>
+                <DialogContent className="sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Bot className="h-5 w-5 text-cyan-500" />
+                      Generate AI Survey
+                    </DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="surveyType">Survey Type</Label>
+                      <Select value={aiSurveyForm.surveyType} onValueChange={(value) => setAISurveyForm({ ...aiSurveyForm, surveyType: value })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Choose survey type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="multiple_choice">Multiple Choice</SelectItem>
+                          <SelectItem value="likert">Likert Scale</SelectItem>
+                          <SelectItem value="open_ended">Open Ended</SelectItem>
+                          <SelectItem value="mixed">Mixed Questions</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="topic">Survey Topic</Label>
+                      <Input
+                        value={aiSurveyForm.topic}
+                        onChange={(e) => setAISurveyForm({ ...aiSurveyForm, topic: e.target.value })}
+                        placeholder="e.g., User Experience, Learning Preferences, Stress Management"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="questionCount">Number of Questions</Label>
+                      <Input
+                        type="number"
+                        value={aiSurveyForm.questionCount}
+                        onChange={(e) => setAISurveyForm({ ...aiSurveyForm, questionCount: e.target.value === '' ? 5 : parseInt(e.target.value) || 5 })}
+                        min="1"
+                        max="20"
+                        placeholder="5"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="surveyRequirements">Custom Requirements (optional)</Label>
+                      <Textarea
+                        value={aiSurveyForm.customRequirements}
+                        onChange={(e) => setAISurveyForm({ ...aiSurveyForm, customRequirements: e.target.value })}
+                        placeholder="Describe any specific requirements for your survey questions..."
+                        rows={3}
+                      />
+                    </div>
+                    <div className="flex justify-end space-x-2">
+                      <Button variant="outline" onClick={() => setShowAISurveyDialog(false)}>
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => generateAISurvey.mutate(aiSurveyForm)}
+                        disabled={!aiSurveyForm.surveyType || !aiSurveyForm.topic || generateAISurvey.isPending}
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                      >
+                        {generateAISurvey.isPending ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating...</>
+                        ) : (
+                          <><Bot className="h-4 w-4 mr-2" /> Generate Survey</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
               <Button
                 variant="outline"
                 onClick={handlePreview}
@@ -257,6 +583,7 @@ export default function StudyBuilder() {
               onUpdateBlock={updateBlock}
               onRemoveBlock={removeBlock}
               onReorderBlocks={reorderBlocks}
+              onAddBlock={addBlock}
             />
           </div>
 

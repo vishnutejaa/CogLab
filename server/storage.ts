@@ -32,6 +32,9 @@ export interface IStorage {
     completionRate: number;
     totalResponses: number;
   }>;
+  
+  // AI-enhanced methods
+  getRecentResponses(participantId: string, limit: number): Promise<Response[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -131,7 +134,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = randomUUID();
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id,
+      firstName: insertUser.firstName || null,
+      lastName: insertUser.lastName || null
+    };
     this.users.set(id, user);
     return user;
   }
@@ -152,6 +160,13 @@ export class MemStorage implements IStorage {
     const study: Study = {
       ...insertStudy,
       id,
+      status: insertStudy.status || "draft",
+      description: insertStudy.description || null,
+      consentForm: insertStudy.consentForm || null,
+      debriefMessage: insertStudy.debriefMessage || null,
+      conditions: insertStudy.conditions || [],
+      experimentBlocks: insertStudy.experimentBlocks || [],
+      randomizeConditions: insertStudy.randomizeConditions || false,
       createdAt: now,
       updatedAt: now
     };
@@ -190,7 +205,13 @@ export class MemStorage implements IStorage {
     const participant: Participant = {
       ...insertParticipant,
       id,
-      startedAt: new Date()
+      status: insertParticipant.status || "started",
+      demographics: insertParticipant.demographics || null,
+      currentBlock: insertParticipant.currentBlock || 0,
+      consentGiven: insertParticipant.consentGiven || false,
+      consentTimestamp: insertParticipant.consentTimestamp || null,
+      startedAt: new Date(),
+      completedAt: null
     };
     this.participants.set(id, participant);
     return participant;
@@ -225,6 +246,10 @@ export class MemStorage implements IStorage {
     const response: Response = {
       ...insertResponse,
       id,
+      questionId: insertResponse.questionId || null,
+      responseTime: insertResponse.responseTime || null,
+      accuracy: insertResponse.accuracy !== undefined ? insertResponse.accuracy : null,
+      stimulus: insertResponse.stimulus || null,
       timestamp: new Date()
     };
     this.responses.set(id, response);
@@ -251,6 +276,11 @@ export class MemStorage implements IStorage {
       completionRate,
       totalResponses
     };
+  }
+
+  async getRecentResponses(participantId: string, limit: number): Promise<Response[]> {
+    const participantResponses = await this.getResponsesByParticipant(participantId);
+    return participantResponses.slice(-limit);
   }
 }
 

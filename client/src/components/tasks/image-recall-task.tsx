@@ -3,9 +3,21 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 interface ImageRecallConfig {
-  images: number;
-  studyTime: number;
-  recallTime: number;
+  images?: number;
+  studyTime?: number;
+  recallTime?: number;
+  trialCount?: number;
+  timings?: {
+    fixationDuration: number;
+    stimulusDuration: number;
+    responseWindow: number;
+  };
+  aiImages?: {
+    id: string;
+    name: string;
+    category: string;
+    url: string;
+  }[];
 }
 
 interface ImageRecallTaskProps {
@@ -59,30 +71,41 @@ export default function ImageRecallTask({ config, onResponse, onComplete }: Imag
 
   // Initialize study images
   useEffect(() => {
-    const shuffled = [...SAMPLE_IMAGES].sort(() => Math.random() - 0.5);
-    setStudyImages(shuffled.slice(0, config.images));
-  }, [config.images]);
+    if (config.aiImages && config.aiImages.length > 0) {
+      // Use AI-generated images
+      const shuffled = [...config.aiImages].sort(() => Math.random() - 0.5);
+      const imageCount = config.trialCount || config.images || 5;
+      setStudyImages(shuffled.slice(0, imageCount));
+    } else {
+      // Use fallback sample images
+      const shuffled = [...SAMPLE_IMAGES].sort(() => Math.random() - 0.5);
+      const imageCount = config.images || 5;
+      setStudyImages(shuffled.slice(0, imageCount));
+    }
+  }, [config.images, config.aiImages, config.trialCount]);
 
   // Timer for study phase
   useEffect(() => {
     if (phase === "study" && currentImageIndex < studyImages.length) {
       setStudyStartTime(Date.now());
+      const studyTime = config.studyTime || config.timings?.stimulusDuration || 4000;
       const timer = setTimeout(() => {
         if (currentImageIndex + 1 < studyImages.length) {
           setCurrentImageIndex(currentImageIndex + 1);
         } else {
           setPhase("distractor");
         }
-      }, config.studyTime);
+      }, studyTime);
       return () => clearTimeout(timer);
     }
-  }, [phase, currentImageIndex, studyImages.length, config.studyTime]);
+  }, [phase, currentImageIndex, studyImages.length, config.studyTime, config.timings]);
 
   // Timer for recall phase
   useEffect(() => {
     if (phase === "recall") {
       setRecallStartTime(Date.now());
-      setTimeRemaining(config.recallTime);
+      const recallTime = config.recallTime || config.timings?.responseWindow || 10000;
+      setTimeRemaining(recallTime);
       
       const timer = setInterval(() => {
         setTimeRemaining(prev => {
@@ -96,7 +119,7 @@ export default function ImageRecallTask({ config, onResponse, onComplete }: Imag
       
       return () => clearInterval(timer);
     }
-  }, [phase, config.recallTime]);
+  }, [phase, config.recallTime, config.timings]);
 
   const startStudyPhase = () => {
     setPhase("study");
@@ -183,11 +206,11 @@ export default function ImageRecallTask({ config, onResponse, onComplete }: Imag
         <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
           <h3 className="font-semibold text-gray-900 mb-4">Instructions:</h3>
           <ul className="space-y-2 text-gray-700 mb-6">
-            <li>• You will see {config.images} images, one at a time</li>
-            <li>• Each image will be shown for {config.studyTime / 1000} seconds</li>
+            <li>• You will see {config.trialCount || config.images || 5} images, one at a time</li>
+            <li>• Each image will be shown for {(config.studyTime || config.timings?.stimulusDuration || 3000) / 1000} seconds</li>
             <li>• Pay close attention and try to remember each image</li>
             <li>• After viewing all images, you'll be asked to recall as many as you can</li>
-            <li>• You'll have {config.recallTime / 1000} seconds for the recall phase</li>
+            <li>• You'll have {(config.recallTime || config.timings?.responseWindow || 10000) / 1000} seconds for the recall phase</li>
           </ul>
         </div>
 
@@ -332,7 +355,7 @@ export default function ImageRecallTask({ config, onResponse, onComplete }: Imag
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-warning h-2 rounded-full transition-all duration-1000" 
-            style={{ width: `${((config.recallTime - timeRemaining) / config.recallTime) * 100}%` }}
+            style={{ width: `${((config.recallTime || config.timings?.responseWindow || 10000) - timeRemaining) / (config.recallTime || config.timings?.responseWindow || 10000) * 100}%` }}
             data-testid="recall-progress-bar"
           />
         </div>

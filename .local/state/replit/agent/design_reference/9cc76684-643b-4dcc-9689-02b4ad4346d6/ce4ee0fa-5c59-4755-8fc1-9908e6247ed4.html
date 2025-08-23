@@ -1,0 +1,790 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CogLab - Psychology Experiment Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#2563eb',
+                        secondary: '#64748b',
+                        success: '#16a34a',
+                        warning: '#f59e0b'
+                    },
+                    fontFamily: {
+                        'sans': ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50 font-sans">
+    <!-- @COMPONENT: AppShell -->
+    <div id="app-shell" class="min-h-screen">
+        
+        <!-- Header Navigation -->
+        <!-- @COMPONENT: HeaderNavigation -->
+        <header class="bg-white shadow-sm border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                                <i class="fas fa-brain text-white text-lg"></i>
+                            </div>
+                            <h1 class="text-xl font-bold text-gray-900">CogLab</h1>
+                        </div>
+                        <nav class="hidden md:flex space-x-6">
+                            <button class="text-primary font-medium border-b-2 border-primary pb-1">Dashboard</button>
+                            <button class="text-gray-600 hover:text-gray-900 pb-1">Studies</button>
+                            <button class="text-gray-600 hover:text-gray-900 pb-1">Templates</button>
+                            <button class="text-gray-600 hover:text-gray-900 pb-1">Data</button>
+                        </nav>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button class="p-2 text-gray-600 hover:text-gray-900">
+                            <i class="fas fa-bell"></i>
+                        </button>
+                        <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                            <span class="text-sm font-medium text-gray-700" data-bind="user.initials">JS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+        <!-- @END_COMPONENT: HeaderNavigation -->
+
+        <!-- Main Dashboard View -->
+        <!-- @COMPONENT: Dashboard -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="dashboard-view">
+            <!-- Quick Actions Section -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">Welcome back, <span data-bind="user.firstName">Dr. Smith</span></h2>
+                        <p class="text-gray-600 mt-1">Manage your psychology experiments and collect insights</p>
+                    </div>
+                    <button class="bg-primary text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-2" data-event="click:createNewStudy">
+                        <i class="fas fa-plus"></i>
+                        <span>Create New Study</span>
+                    </button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Active Studies</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="stats.activeStudies">12</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-flask text-primary text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Total Participants</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="stats.participants">1,247</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-success text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Completion Rate</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="stats.completionRate">87%</p>
+                            </div>
+                            <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-chart-line text-warning text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg p-6 shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm font-medium text-gray-600">Data Points</p>
+                                <p class="text-2xl font-bold text-gray-900" data-bind="stats.dataPoints">23.5K</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-database text-purple-600 text-lg"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Studies Section -->
+            <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-8">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Recent Studies</h3>
+                </div>
+                <div class="p-6">
+                    <!-- @MAP: studies.map(study => ( -->
+                    <div class="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0" data-mock="true">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-eye text-primary"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">Stroop Color-Word Task</h4>
+                                <p class="text-sm text-gray-600">Visual attention experiment • 156 participants</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">Active</span>
+                            <span class="text-sm text-gray-600">Updated 2h ago</span>
+                            <button class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0" data-mock="true">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-image text-purple-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">Image Recall Memory Task</h4>
+                                <p class="text-sm text-gray-600">Memory assessment • 89 participants</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-medium">Draft</span>
+                            <span class="text-sm text-gray-600">Updated 1d ago</span>
+                            <button class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between py-4 border-b border-gray-100 last:border-b-0" data-mock="true">
+                        <div class="flex items-center space-x-4">
+                            <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-clipboard-list text-success"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-gray-900">Social Cognition Survey</h4>
+                                <p class="text-sm text-gray-600">Behavioral assessment • 203 participants</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">Completed</span>
+                            <span class="text-sm text-gray-600">Updated 3d ago</span>
+                            <button class="text-gray-400 hover:text-gray-600">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+            </div>
+
+            <!-- Quick Templates Section -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Popular Templates</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer" data-event="click:selectTemplate" data-template="stroop">
+                                <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-eye text-primary text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Stroop Task</h4>
+                                    <p class="text-sm text-gray-600">Classic color-word interference test</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer" data-event="click:selectTemplate" data-template="memory">
+                                <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-brain text-purple-600 text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Image Recall</h4>
+                                    <p class="text-sm text-gray-600">Visual memory assessment task</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer" data-event="click:selectTemplate" data-template="survey">
+                                <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                                    <i class="fas fa-clipboard-list text-success text-sm"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Survey Template</h4>
+                                    <p class="text-sm text-gray-600">Customizable questionnaire builder</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+                    <div class="px-6 py-4 border-b border-gray-200">
+                        <h3 class="text-lg font-semibold text-gray-900">Getting Started</h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="space-y-4">
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center mt-1">
+                                    <span class="text-white text-xs font-bold">1</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Upload IRB Documentation</h4>
+                                    <p class="text-sm text-gray-600">Ensure compliance with ethics requirements</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center mt-1">
+                                    <span class="text-white text-xs font-bold">2</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Design Your Experiment</h4>
+                                    <p class="text-sm text-gray-600">Use our drag-and-drop builder</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-6 h-6 bg-primary rounded-full flex items-center justify-center mt-1">
+                                    <span class="text-white text-xs font-bold">3</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-gray-900">Share & Collect Data</h4>
+                                    <p class="text-sm text-gray-600">Generate participant links and monitor progress</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+        <!-- @END_COMPONENT: Dashboard -->
+
+        <!-- Study Builder Interface (Hidden by default) -->
+        <!-- @COMPONENT: StudyBuilder -->
+        <div id="study-builder" class="hidden min-h-screen bg-gray-50">
+            <!-- Builder Header -->
+            <div class="bg-white shadow-sm border-b border-gray-200">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between py-4">
+                        <div class="flex items-center space-x-4">
+                            <button class="text-gray-600 hover:text-gray-900" data-event="click:backToDashboard">
+                                <i class="fas fa-arrow-left"></i>
+                            </button>
+                            <div>
+                                <h1 class="text-xl font-bold text-gray-900">Study Builder</h1>
+                                <p class="text-sm text-gray-600">Stroop Color-Word Task</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200" data-event="click:previewStudy">
+                                <i class="fas fa-eye mr-2"></i>Preview
+                            </button>
+                            <button class="px-4 py-2 text-white bg-primary rounded-lg hover:bg-blue-700" data-event="click:saveStudy">
+                                <i class="fas fa-save mr-2"></i>Save
+                            </button>
+                            <button class="px-4 py-2 text-white bg-success rounded-lg hover:bg-green-700" data-event="click:publishStudy">
+                                <i class="fas fa-share mr-2"></i>Publish
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="grid grid-cols-12 gap-6">
+                    <!-- Component Palette -->
+                    <div class="col-span-3">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-6">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <h3 class="font-semibold text-gray-900">Components</h3>
+                            </div>
+                            <div class="p-4">
+                                <div class="space-y-3">
+                                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Basic</div>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="consent">
+                                            <i class="fas fa-file-contract text-blue-500"></i>
+                                            <span class="text-sm font-medium">Consent Form</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="demographics">
+                                            <i class="fas fa-user-circle text-green-500"></i>
+                                            <span class="text-sm font-medium">Demographics</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="instructions">
+                                            <i class="fas fa-list-alt text-purple-500"></i>
+                                            <span class="text-sm font-medium">Instructions</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4">Tasks</div>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="stroop">
+                                            <i class="fas fa-eye text-blue-500"></i>
+                                            <span class="text-sm font-medium">Stroop Task</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="memory">
+                                            <i class="fas fa-images text-purple-500"></i>
+                                            <span class="text-sm font-medium">Image Recall</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-4">Survey</div>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="mcq">
+                                            <i class="fas fa-check-circle text-green-500"></i>
+                                            <span class="text-sm font-medium">Multiple Choice</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="likert">
+                                            <i class="fas fa-star text-yellow-500"></i>
+                                            <span class="text-sm font-medium">Likert Scale</span>
+                                        </div>
+                                        <div class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-50 cursor-move" draggable="true" data-component="openended">
+                                            <i class="fas fa-edit text-orange-500"></i>
+                                            <span class="text-sm font-medium">Open Ended</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Builder Canvas -->
+                    <div class="col-span-6">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 min-h-screen">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <h3 class="font-semibold text-gray-900">Experiment Flow</h3>
+                            </div>
+                            <div class="p-6">
+                                <!-- @FUNCTIONALITY: This should be a drag-and-drop sortable area where researchers can build their experiment flow -->
+                                <div id="experiment-canvas" class="space-y-4 min-h-96" data-implementation="Implement drag-and-drop functionality with sortable experiment blocks">
+                                    <!-- Default experiment blocks -->
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-grip-vertical text-gray-400"></i>
+                                            <i class="fas fa-file-contract text-blue-500"></i>
+                                            <div>
+                                                <h4 class="font-medium">Consent Form</h4>
+                                                <p class="text-sm text-gray-600">Participant agreement required</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-cog"></i></button>
+                                            <button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-grip-vertical text-gray-400"></i>
+                                            <i class="fas fa-user-circle text-green-500"></i>
+                                            <div>
+                                                <h4 class="font-medium">Demographics</h4>
+                                                <p class="text-sm text-gray-600">Age, gender, education level</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-cog"></i></button>
+                                            <button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-grip-vertical text-gray-400"></i>
+                                            <i class="fas fa-eye text-blue-500"></i>
+                                            <div>
+                                                <h4 class="font-medium">Stroop Task</h4>
+                                                <p class="text-sm text-gray-600">60 trials, randomized order</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-cog"></i></button>
+                                            <button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-grip-vertical text-gray-400"></i>
+                                            <i class="fas fa-clipboard-list text-purple-500"></i>
+                                            <div>
+                                                <h4 class="font-medium">Post-Task Survey</h4>
+                                                <p class="text-sm text-gray-600">5 questions, Likert scale</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-cog"></i></button>
+                                            <button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex items-center justify-between">
+                                        <div class="flex items-center space-x-3">
+                                            <i class="fas fa-grip-vertical text-gray-400"></i>
+                                            <i class="fas fa-info-circle text-gray-500"></i>
+                                            <div>
+                                                <h4 class="font-medium">Debrief</h4>
+                                                <p class="text-sm text-gray-600">Thank you message and resources</p>
+                                            </div>
+                                        </div>
+                                        <div class="flex items-center space-x-2">
+                                            <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-cog"></i></button>
+                                            <button class="text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Drop Zone -->
+                                    <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center text-gray-500">
+                                        <i class="fas fa-plus-circle text-2xl mb-2"></i>
+                                        <p>Drag components here to add them to your experiment</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Properties Panel -->
+                    <div class="col-span-3">
+                        <div class="bg-white rounded-lg shadow-sm border border-gray-200 sticky top-6">
+                            <div class="px-4 py-3 border-b border-gray-200">
+                                <h3 class="font-semibold text-gray-900">Properties</h3>
+                            </div>
+                            <div class="p-4">
+                                <!-- @STATE: selectedComponent:string = 'stroop' -->
+                                <div id="component-properties">
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Component Type</label>
+                                            <p class="text-sm text-gray-900 bg-gray-50 px-3 py-2 rounded">Stroop Task</p>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Number of Trials</label>
+                                            <input type="number" value="60" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="component.trials">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Trial Duration (ms)</label>
+                                            <input type="number" value="5000" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="component.duration">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Randomize Order</label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" checked class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" data-bind="component.randomize">
+                                                <span class="ml-2 text-sm text-gray-600">Randomize stimulus presentation</span>
+                                            </label>
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-2">Conditions</label>
+                                            <div class="space-y-2">
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" checked class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                                                    <span class="ml-2 text-sm text-gray-600">Congruent</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" checked class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                                                    <span class="ml-2 text-sm text-gray-600">Incongruent</span>
+                                                </label>
+                                                <label class="flex items-center">
+                                                    <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                                                    <span class="ml-2 text-sm text-gray-600">Neutral</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: StudyBuilder -->
+
+        <!-- Participant Experience -->
+        <!-- @COMPONENT: ParticipantView -->
+        <div id="participant-view" class="hidden min-h-screen bg-white">
+            <!-- Participant Header -->
+            <div class="bg-white border-b border-gray-200">
+                <div class="max-w-2xl mx-auto px-4 py-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-6 h-6 bg-primary rounded-lg flex items-center justify-center">
+                                <i class="fas fa-brain text-white text-xs"></i>
+                            </div>
+                            <span class="font-medium text-gray-900">CogLab Study</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-sm text-gray-600">Progress:</span>
+                                <div class="w-32 bg-gray-200 rounded-full h-2">
+                                    <div class="bg-primary h-2 rounded-full w-1/3" data-bind="progress.percentage"></div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-900" data-bind="progress.text">2 of 5</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Consent Form View -->
+            <div id="consent-view" class="max-w-2xl mx-auto px-4 py-8">
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Informed Consent</h1>
+                    <p class="text-gray-600">Please read the following information carefully</p>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                    <div class="prose prose-sm max-w-none text-gray-800" data-mock="true">
+                        <h3 class="font-semibold mb-3">Study Title: Stroop Color-Word Task</h3>
+                        <p class="mb-4">You are being invited to participate in a research study investigating visual attention and cognitive processing. This study is being conducted by Dr. Smith at University Research Lab.</p>
+                        
+                        <h4 class="font-semibold mb-2">What will happen during the study?</h4>
+                        <p class="mb-4">You will complete a computer-based task where you identify colors of words displayed on screen. The task takes approximately 15 minutes to complete.</p>
+                        
+                        <h4 class="font-semibold mb-2">Risks and Benefits</h4>
+                        <p class="mb-4">There are no known risks associated with this study. Your participation will contribute to our understanding of cognitive processes.</p>
+                        
+                        <h4 class="font-semibold mb-2">Confidentiality</h4>
+                        <p class="mb-4">All data collected will be anonymous and confidential. No personal identifying information will be stored with your responses.</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="flex items-start">
+                        <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary mt-1" data-bind="consent.read" data-implementation="Must be checked to enable consent button">
+                        <span class="ml-3 text-sm text-gray-700">I have read and understand the information provided above</span>
+                    </label>
+                    <label class="flex items-start">
+                        <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary mt-1" data-bind="consent.participate" data-implementation="Must be checked to enable consent button">
+                        <span class="ml-3 text-sm text-gray-700">I voluntarily agree to participate in this research study</span>
+                    </label>
+                    <label class="flex items-start">
+                        <input type="checkbox" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary mt-1" data-bind="consent.eighteen" data-implementation="Must be checked to enable consent button">
+                        <span class="ml-3 text-sm text-gray-700">I am 18 years of age or older</span>
+                    </label>
+                </div>
+
+                <div class="flex justify-between mt-8">
+                    <button class="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200" data-event="click:declineParticipation">
+                        Decline
+                    </button>
+                    <button class="px-6 py-3 text-white bg-primary rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed" data-event="click:agreeToParticipate" data-implementation="Should be disabled until all checkboxes are checked">
+                        I Agree to Participate
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stroop Task View -->
+            <div id="stroop-task-view" class="hidden max-w-2xl mx-auto px-4 py-8">
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Stroop Task</h1>
+                    <p class="text-gray-600">Identify the COLOR of the word, not the word itself</p>
+                    <p class="text-sm text-gray-500 mt-2">Use the keyboard keys: R (Red), G (Green), B (Blue), Y (Yellow)</p>
+                </div>
+
+                <!-- @FUNCTIONALITY: This should implement the actual Stroop task with stimulus presentation and response collection -->
+                <div class="bg-white border-2 border-gray-200 rounded-lg min-h-96 flex items-center justify-center mb-6" data-implementation="Implement Stroop task stimulus presentation with timing control">
+                    <div class="text-center">
+                        <div class="text-6xl font-bold mb-6" style="color: #dc2626;" data-bind="stimulus.color" data-mock="true">
+                            GREEN
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            Press the key corresponding to the color of the word
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex justify-center space-x-4 mb-6">
+                    <div class="bg-red-100 px-4 py-2 rounded-lg">
+                        <span class="font-medium text-red-800">R - Red</span>
+                    </div>
+                    <div class="bg-green-100 px-4 py-2 rounded-lg">
+                        <span class="font-medium text-green-800">G - Green</span>
+                    </div>
+                    <div class="bg-blue-100 px-4 py-2 rounded-lg">
+                        <span class="font-medium text-blue-800">B - Blue</span>
+                    </div>
+                    <div class="bg-yellow-100 px-4 py-2 rounded-lg">
+                        <span class="font-medium text-yellow-800">Y - Yellow</span>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">Trial <span data-bind="trial.current">12</span> of <span data-bind="trial.total">60</span></p>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div class="bg-primary h-2 rounded-full" style="width: 20%" data-bind="trial.progressWidth"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Demographics View -->
+            <div id="demographics-view" class="hidden max-w-2xl mx-auto px-4 py-8">
+                <div class="text-center mb-8">
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Demographics</h1>
+                    <p class="text-gray-600">Please provide some basic information about yourself</p>
+                </div>
+
+                <form class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Age</label>
+                        <input type="number" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter your age" data-bind="demographics.age">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                        <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="demographics.gender">
+                            <option value="">Select gender</option>
+                            <option value="female">Female</option>
+                            <option value="male">Male</option>
+                            <option value="non-binary">Non-binary</option>
+                            <option value="prefer-not-to-say">Prefer not to say</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Highest Level of Education</label>
+                        <select class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" data-bind="demographics.education">
+                            <option value="">Select education level</option>
+                            <option value="high-school">High School</option>
+                            <option value="some-college">Some College</option>
+                            <option value="bachelors">Bachelor's Degree</option>
+                            <option value="masters">Master's Degree</option>
+                            <option value="doctorate">Doctorate</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Primary Language</label>
+                        <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="Enter your primary language" data-bind="demographics.language">
+                    </div>
+                </form>
+
+                <div class="flex justify-between mt-8">
+                    <button class="px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200" data-event="click:previousStep">
+                        Previous
+                    </button>
+                    <button class="px-6 py-3 text-white bg-primary rounded-lg hover:bg-blue-700" data-event="click:nextStep">
+                        Continue
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thank You / Debrief View -->
+            <div id="debrief-view" class="hidden max-w-2xl mx-auto px-4 py-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-check text-green-600 text-2xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-gray-900 mb-2">Thank You!</h1>
+                    <p class="text-gray-600 mb-8">Your participation in this study has been completed successfully.</p>
+                </div>
+
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-6 mb-6">
+                    <h3 class="font-semibold text-gray-900 mb-3">About This Study</h3>
+                    <p class="text-gray-700 text-sm leading-relaxed" data-mock="true">
+                        The Stroop task you just completed is a classic psychological test that measures cognitive interference. 
+                        When the color of a word and its meaning don't match (like the word "GREEN" printed in red), it typically 
+                        takes longer to identify the color. This demonstrates how automatic reading processes can interfere with 
+                        color naming. Your data will help us understand individual differences in cognitive control.
+                    </p>
+                </div>
+
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-6">
+                    <h3 class="font-semibold text-gray-900 mb-3">Additional Resources</h3>
+                    <div class="space-y-2">
+                        <a href="#" class="text-primary hover:underline text-sm block" data-mock="true">Learn more about the Stroop effect</a>
+                        <a href="#" class="text-primary hover:underline text-sm block" data-mock="true">University Research Lab website</a>
+                        <a href="#" class="text-primary hover:underline text-sm block" data-mock="true">Contact the research team</a>
+                    </div>
+                </div>
+
+                <div class="text-center">
+                    <p class="text-sm text-gray-600 mb-4">You may now close this window.</p>
+                    <p class="text-xs text-gray-500">Study ID: ST-2024-001 | Session: <span data-bind="session.id">abc123</span></p>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: ParticipantView -->
+
+    </div>
+    <!-- @END_COMPONENT: AppShell -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        
+        (function() {
+            // View Management
+            const views = {
+                dashboard: document.getElementById('dashboard-view'),
+                builder: document.getElementById('study-builder'),
+                participant: document.getElementById('participant-view')
+            };
+
+            function showView(viewName) {
+                Object.keys(views).forEach(key => {
+                    if (views[key]) {
+                        views[key].classList.add('hidden');
+                    }
+                });
+                if (views[viewName]) {
+                    views[viewName].classList.remove('hidden');
+                }
+            }
+
+            // Navigation Event Handlers
+            document.addEventListener('click', function(e) {
+                // Create New Study button
+                if (e.target.closest('[data-event="click:createNewStudy"]')) {
+                    showView('builder');
+                }
+                
+                // Back to Dashboard
+                if (e.target.closest('[data-event="click:backToDashboard"]')) {
+                    showView('dashboard');
+                }
+                
+                // Preview Study (show participant view)
+                if (e.target.closest('[data-event="click:previewStudy"]')) {
+                    showView('participant');
+                }
+            });
+
+            // Drag and Drop Functionality (Basic Demo)
+            const canvas = document.getElementById('experiment-canvas');
+            const components = document.querySelectorAll('[draggable="true"]');
+
+            components.forEach(component => {
+                component.addEventListener('dragstart', function(e) {
+                    e.dataTransfer.setData('text/plain', this.dataset.component);
+                });
+            });
+
+            if (canvas) {
+                canvas.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                });
+
+                canvas.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    const componentType = e.dataTransfer.getData('text/plain');
+                    // TODO: Add new component block to the canvas
+                    console.log('Dropped component:', componentType);
+                });
+            }
+
+            // Initialize with dashboard view
+            showView('dashboard');
+        })();
+    </script>
+</body>
+</html>

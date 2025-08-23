@@ -46,8 +46,14 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
               <Input
                 id="trials"
                 type="number"
-                value={selectedBlock.trials || 60}
-                onChange={(e) => handleUpdate("trials", parseInt(e.target.value))}
+                value={selectedBlock.trialCount || selectedBlock.trials || 60}
+                onChange={(e) => {
+                  const count = e.target.value === '' ? 60 : parseInt(e.target.value) || 60;
+                  // Update both properties for compatibility
+                  handleUpdate("trials", count);
+                  handleUpdate("trialCount", count);
+                }}
+                min="1"
                 data-testid="input-trials"
               />
             </div>
@@ -59,7 +65,7 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
                 id="duration"
                 type="number"
                 value={selectedBlock.duration || 5000}
-                onChange={(e) => handleUpdate("duration", parseInt(e.target.value))}
+                onChange={(e) => handleUpdate("duration", e.target.value === '' ? 5000 : parseInt(e.target.value) || 5000)}
                 data-testid="input-duration"
               />
             </div>
@@ -85,7 +91,7 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
                       const conditions = selectedBlock.conditions || ["congruent", "incongruent"];
                       const newConditions = checked 
                         ? [...conditions, "congruent"].filter((c, i, arr) => arr.indexOf(c) === i)
-                        : conditions.filter(c => c !== "congruent");
+                        : conditions.filter((c: string) => c !== "congruent");
                       handleUpdate("conditions", newConditions);
                     }}
                     data-testid="checkbox-congruent"
@@ -100,7 +106,7 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
                       const conditions = selectedBlock.conditions || ["congruent", "incongruent"];
                       const newConditions = checked 
                         ? [...conditions, "incongruent"].filter((c, i, arr) => arr.indexOf(c) === i)
-                        : conditions.filter(c => c !== "incongruent");
+                        : conditions.filter((c: string) => c !== "incongruent");
                       handleUpdate("conditions", newConditions);
                     }}
                     data-testid="checkbox-incongruent"
@@ -115,7 +121,7 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
                       const conditions = selectedBlock.conditions || ["congruent", "incongruent"];
                       const newConditions = checked 
                         ? [...conditions, "neutral"].filter((c, i, arr) => arr.indexOf(c) === i)
-                        : conditions.filter(c => c !== "neutral");
+                        : conditions.filter((c: string) => c !== "neutral");
                       handleUpdate("conditions", newConditions);
                     }}
                     data-testid="checkbox-neutral"
@@ -137,8 +143,15 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
               <Input
                 id="images"
                 type="number"
-                value={selectedBlock.images || 20}
-                onChange={(e) => handleUpdate("images", parseInt(e.target.value))}
+                value={selectedBlock.trialCount || selectedBlock.images || 4}
+                onChange={(e) => {
+                  const count = e.target.value === '' ? 4 : parseInt(e.target.value) || 4;
+                  // Update both properties for compatibility
+                  handleUpdate("images", count);
+                  handleUpdate("trialCount", count);
+                }}
+                min="1"
+                max="20"
                 data-testid="input-images"
               />
             </div>
@@ -149,8 +162,8 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
               <Input
                 id="studyTime"
                 type="number"
-                value={selectedBlock.studyTime || 3000}
-                onChange={(e) => handleUpdate("studyTime", parseInt(e.target.value))}
+                value={selectedBlock.studyTime || 4000}
+                onChange={(e) => handleUpdate("studyTime", e.target.value === '' ? 4000 : parseInt(e.target.value) || 4000)}
                 data-testid="input-study-time"
               />
             </div>
@@ -162,7 +175,7 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
                 id="recallTime"
                 type="number"
                 value={selectedBlock.recallTime || 10000}
-                onChange={(e) => handleUpdate("recallTime", parseInt(e.target.value))}
+                onChange={(e) => handleUpdate("recallTime", e.target.value === '' ? 10000 : parseInt(e.target.value) || 10000)}
                 data-testid="input-recall-time"
               />
             </div>
@@ -189,8 +202,21 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
         );
 
       case "survey":
+      case "mcq":
+      case "likert":
+      case "openended":
         return (
           <div className="space-y-4" data-testid="survey-properties">
+            <div>
+              <Label htmlFor="surveyType" className="block text-sm font-medium text-gray-700 mb-2">
+                Survey Type
+              </Label>
+              <p className="text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded">
+                {selectedBlock.type === "mcq" ? "Multiple Choice" :
+                 selectedBlock.type === "likert" ? "Likert Scale" :
+                 selectedBlock.type === "openended" ? "Open Ended" : "Survey"}
+              </p>
+            </div>
             <div>
               <Label htmlFor="questionCount" className="block text-sm font-medium text-gray-700 mb-2">
                 Number of Questions
@@ -198,18 +224,65 @@ export default function PropertiesPanel({ selectedBlock, onUpdateBlock }: Proper
               <Input
                 id="questionCount"
                 type="number"
-                value={selectedBlock.questions?.length || 5}
+                value={selectedBlock.questions?.length || 1}
                 onChange={(e) => {
-                  const count = parseInt(e.target.value);
-                  const questions = Array(count).fill(null).map((_, i) => ({
-                    id: `q${i + 1}`,
-                    text: `Question ${i + 1}`,
-                    type: "likert"
-                  }));
-                  handleUpdate("questions", questions);
+                  const count = e.target.value === '' ? 1 : parseInt(e.target.value) || 1;
+                  const currentQuestions = selectedBlock.questions || [];
+                  let newQuestions = [...currentQuestions];
+                  
+                  // Add or remove questions based on count
+                  if (count > newQuestions.length) {
+                    // Add new questions
+                    for (let i = newQuestions.length; i < count; i++) {
+                      const questionType = selectedBlock.type === "mcq" ? "multiple_choice" :
+                                         selectedBlock.type === "likert" ? "likert" : "open_ended";
+                      
+                      const newQuestion = {
+                        id: `q${i + 1}`,
+                        type: questionType,
+                        question: `Question ${i + 1}`,
+                        ...(questionType === "multiple_choice" && {
+                          options: ["Option 1", "Option 2", "Option 3", "Option 4"]
+                        }),
+                        ...(questionType === "likert" && {
+                          scale: {
+                            min: 1,
+                            max: 7,
+                            labels: ["Strongly Disagree", "Disagree", "Somewhat Disagree", "Neutral", "Somewhat Agree", "Agree", "Strongly Agree"]
+                          }
+                        })
+                      };
+                      newQuestions.push(newQuestion);
+                    }
+                  } else if (count < newQuestions.length) {
+                    // Remove questions
+                    newQuestions = newQuestions.slice(0, count);
+                  }
+                  
+                  handleUpdate("questions", newQuestions);
                 }}
+                min="1"
+                max="20"
                 data-testid="input-question-count"
               />
+            </div>
+            <div>
+              <Label className="block text-sm font-medium text-gray-700 mb-2">
+                Questions Preview
+              </Label>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 max-h-32 overflow-y-auto">
+                {selectedBlock.questions?.length > 0 ? (
+                  <div className="space-y-1 text-xs text-gray-600">
+                    {selectedBlock.questions.map((q: any, index: number) => (
+                      <div key={index}>
+                        <strong>Q{index + 1}:</strong> {q.question}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No questions yet</p>
+                )}
+              </div>
             </div>
           </div>
         );

@@ -1,11 +1,19 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, UserCircle, BookOpen, Eye, Image, CheckCircle, Star, Edit, Info } from "lucide-react";
+import { FileText, UserCircle, BookOpen, Eye, Image, CheckCircle, Star, Edit, Info, Bot } from "lucide-react";
 
 interface ComponentPaletteProps {
   onAddBlock: (blockType: string) => void;
 }
 
 const components = [
+  {
+    category: "AI Experiments",
+    items: [
+      { type: "ai_stroop", icon: Bot, label: "AI Stroop Task", color: "text-cyan-500" },
+      { type: "ai_memory", icon: Bot, label: "AI Memory Task", color: "text-cyan-600" },
+      { type: "ai_survey", icon: Bot, label: "AI Survey", color: "text-cyan-700" },
+    ]
+  },
   {
     category: "Basic",
     items: [

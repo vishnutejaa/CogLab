@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Brain, 
@@ -17,7 +18,10 @@ import {
   BarChart3,
   Calendar,
   Filter,
-  FileText
+  FileText,
+  Bot,
+  Lightbulb,
+  AlertCircle
 } from "lucide-react";
 
 interface Study {
@@ -35,6 +39,23 @@ interface DashboardStats {
   participants: number;
   completionRate: number;
   dataPoints: number;
+}
+
+interface AnalysisResult {
+  meanResponseTime: number;
+  accuracy: number;
+  stroopEffect?: number;
+  outlierCount: number;
+  qualityScore: number;
+  insights: string[];
+  recommendations: string[];
+}
+
+interface StudyAnalysis {
+  analysis: AnalysisResult;
+  exportData: any[];
+  participantCount: number;
+  responseCount: number;
 }
 
 function formatDate(dateString: string) {
@@ -67,6 +88,7 @@ export default function DataPage() {
   
   const [selectedStudy, setSelectedStudy] = useState<string>("all");
   const [timeRange, setTimeRange] = useState("30days");
+  const [showingAnalysis, setShowingAnalysis] = useState<string | null>(null);
 
   const { data: studies, isLoading: studiesLoading } = useQuery<Study[]>({
     queryKey: ["/api/studies"],
@@ -74,6 +96,16 @@ export default function DataPage() {
 
   const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["/api/dashboard/stats"],
+  });
+
+  const { data: studyAnalysis, isLoading: analysisLoading, refetch: refetchAnalysis } = useQuery<StudyAnalysis>({
+    queryKey: ["/api/studies", showingAnalysis, "analysis"],
+    enabled: !!showingAnalysis,
+    queryFn: async () => {
+      const response = await fetch(`/api/studies/${showingAnalysis}/analysis`);
+      if (!response.ok) throw new Error('Analysis failed');
+      return response.json();
+    }
   });
 
   const handleExportData = async (studyId?: string) => {
@@ -333,16 +365,27 @@ export default function DataPage() {
                           </div>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleExportData(study.id)}
-                        className="ml-4"
-                        data-testid={`button-export-${study.id}`}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Export CSV
-                      </Button>
+                      <div className="flex space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setShowingAnalysis(study.id)}
+                          className="text-cyan-700 border-cyan-200 hover:bg-cyan-50"
+                          data-testid={`button-analyze-${study.id}`}
+                        >
+                          <Bot className="h-4 w-4 mr-1" />
+                          AI Analyze
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleExportData(study.id)}
+                          data-testid={`button-export-${study.id}`}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          Export CSV
+                        </Button>
+                      </div>
                     </div>
                   );
                 })}
@@ -362,34 +405,130 @@ export default function DataPage() {
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
-          <Card className="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="recent-activity">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
-            </div>
-            <CardContent className="p-6">
-              <div className="space-y-4">
-                {studies?.slice(0, 5).map((study) => (
-                  <div key={study.id} className="flex items-start space-x-3" data-testid={`activity-${study.id}`}>
-                    <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
-                    <div className="flex-1">
-                      <p className="text-sm text-gray-900">
-                        <span className="font-medium">{study.title}</span> was updated
-                      </p>
-                      <p className="text-xs text-gray-500">{formatDate(study.updatedAt)}</p>
+          {/* AI Analysis Results */}
+          {showingAnalysis && (
+            <Card className="bg-white rounded-lg shadow-sm border border-cyan-200" data-testid="ai-analysis-panel">
+              <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50 border-b border-cyan-200">
+                <CardTitle className="flex items-center gap-2 text-cyan-900">
+                  <Bot className="h-5 w-5" />
+                  AI Analysis Results
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowingAnalysis(null)}
+                    className="ml-auto text-gray-500 hover:text-gray-700"
+                  >
+                    ×
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {analysisLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+                    <span className="ml-3 text-gray-600">Analyzing data with AI...</span>
+                  </div>
+                ) : studyAnalysis?.analysis ? (
+                  <div className="space-y-6">
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="text-sm text-gray-600">Mean Response Time</div>
+                        <div className="text-xl font-bold text-gray-900">{studyAnalysis.analysis.meanResponseTime}ms</div>
+                      </div>
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="text-sm text-gray-600">Accuracy</div>
+                        <div className="text-xl font-bold text-gray-900">{Math.round(studyAnalysis.analysis.accuracy * 100)}%</div>
+                      </div>
+                      {studyAnalysis.analysis.stroopEffect && (
+                        <div className="bg-gray-50 p-4 rounded-lg">
+                          <div className="text-sm text-gray-600">Stroop Effect</div>
+                          <div className="text-xl font-bold text-gray-900">{studyAnalysis.analysis.stroopEffect}ms</div>
+                        </div>
+                      )}
+                      <div className="bg-gray-50 p-4 rounded-lg">
+                        <div className="text-sm text-gray-600">Quality Score</div>
+                        <div className="text-xl font-bold text-gray-900">{studyAnalysis.analysis.qualityScore}/100</div>
+                      </div>
+                    </div>
+
+                    {/* AI Insights */}
+                    {studyAnalysis.analysis.insights.length > 0 && (
+                      <Alert className="border-blue-200 bg-blue-50">
+                        <Lightbulb className="h-4 w-4 text-blue-600" />
+                        <AlertDescription className="text-blue-800">
+                          <div className="font-medium mb-2">AI Insights:</div>
+                          {studyAnalysis.analysis.insights.map((insight, index) => (
+                            <div key={index} className="text-sm mb-1">• {insight}</div>
+                          ))}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* AI Recommendations */}
+                    {studyAnalysis.analysis.recommendations.length > 0 && (
+                      <Alert className="border-amber-200 bg-amber-50">
+                        <AlertCircle className="h-4 w-4 text-amber-600" />
+                        <AlertDescription className="text-amber-800">
+                          <div className="font-medium mb-2">AI Recommendations:</div>
+                          {studyAnalysis.analysis.recommendations.map((rec, index) => (
+                            <div key={index} className="text-sm mb-1">• {rec}</div>
+                          ))}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
+                    {/* Export Enhanced Data */}
+                    <div className="flex justify-end">
+                      <Button 
+                        onClick={() => handleExportData(showingAnalysis)}
+                        className="bg-cyan-600 hover:bg-cyan-700"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export AI-Enhanced Data
+                      </Button>
                     </div>
                   </div>
-                ))}
-                
-                {!studies?.length && (
+                ) : (
                   <div className="text-center py-8">
-                    <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-600 text-sm">No recent activity</p>
+                    <AlertCircle className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-gray-600">No data available for analysis</p>
                   </div>
                 )}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recent Activity - Show only if not showing analysis */}
+          {!showingAnalysis && (
+            <Card className="bg-white rounded-lg shadow-sm border border-gray-200" data-testid="recent-activity">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900">Recent Activity</h3>
               </div>
-            </CardContent>
-          </Card>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {studies?.slice(0, 5).map((study) => (
+                    <div key={study.id} className="flex items-start space-x-3" data-testid={`activity-${study.id}`}>
+                      <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
+                      <div className="flex-1">
+                        <p className="text-sm text-gray-900">
+                          <span className="font-medium">{study.title}</span> was updated
+                        </p>
+                        <p className="text-xs text-gray-500">{formatDate(study.updatedAt)}</p>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  {!studies?.length && (
+                    <div className="text-center py-8">
+                      <Clock className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-600 text-sm">No recent activity</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Data Formats Information */}
@@ -400,7 +539,7 @@ export default function DataPage() {
           <CardContent className="p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium text-gray-900 mb-3">CSV Export Includes:</h4>
+                <h4 className="font-medium text-gray-900 mb-3">AI-Enhanced CSV Export Includes:</h4>
                 <ul className="space-y-2 text-sm text-gray-600">
                   <li>• Participant ID and session information</li>
                   <li>• All task responses with timing data</li>
@@ -408,6 +547,8 @@ export default function DataPage() {
                   <li>• Demographic information (anonymized)</li>
                   <li>• Stimulus presentations and conditions</li>
                   <li>• Timestamps for all interactions</li>
+                  <li className="text-cyan-700 font-medium">• AI-detected outliers and quality flags</li>
+                  <li className="text-cyan-700 font-medium">• Trial-level AI analysis markers</li>
                 </ul>
               </div>
               <div>

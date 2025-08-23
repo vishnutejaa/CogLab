@@ -70,6 +70,7 @@ export default function Dashboard() {
 
   const { data: user } = useQuery({
     queryKey: ["/api/user"],
+    select: (data: any) => data || {}
   });
 
   const handleCreateNewStudy = () => {

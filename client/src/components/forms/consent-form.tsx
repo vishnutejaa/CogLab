@@ -76,7 +76,7 @@ export default function ConsentForm({ onSubmit, studyTitle }: ConsentFormProps) 
           <Checkbox
             id="hasRead"
             checked={hasRead}
-            onCheckedChange={setHasRead}
+            onCheckedChange={(checked) => setHasRead(checked === true)}
             className="mt-1"
             data-testid="checkbox-has-read"
           />
@@ -89,7 +89,7 @@ export default function ConsentForm({ onSubmit, studyTitle }: ConsentFormProps) 
           <Checkbox
             id="willParticipate"
             checked={willParticipate}
-            onCheckedChange={setWillParticipate}
+            onCheckedChange={(checked) => setWillParticipate(checked === true)}
             className="mt-1"
             data-testid="checkbox-will-participate"
           />
@@ -102,7 +102,7 @@ export default function ConsentForm({ onSubmit, studyTitle }: ConsentFormProps) 
           <Checkbox
             id="isEighteen"
             checked={isEighteen}
-            onCheckedChange={setIsEighteen}
+            onCheckedChange={(checked) => setIsEighteen(checked === true)}
             className="mt-1"
             data-testid="checkbox-is-eighteen"
           />

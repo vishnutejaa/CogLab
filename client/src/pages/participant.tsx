@@ -8,6 +8,7 @@ import ConsentForm from "@/components/forms/consent-form";
 import DemographicsForm from "@/components/forms/demographics-form";
 import StroopTask from "@/components/tasks/stroop-task";
 import ImageRecallTask from "@/components/tasks/image-recall-task";
+import SurveyTask from "@/components/tasks/survey-task";
 
 interface Study {
   id: string;
@@ -43,21 +44,22 @@ export default function ParticipantView() {
 
   // Start participation session
   const startParticipationMutation = useMutation({
-    mutationFn: () => apiRequest("POST", `/api/participate/${studyId}`, {}),
+    mutationFn: () => apiRequest("POST", `/api/participate/${studyId}`),
     onSuccess: async (response) => {
       const sessionData = await response.json();
       setSession(sessionData);
       
       // Get participant details
-      const participantResponse = await apiRequest("GET", `/api/participants/${sessionData.participantId}`, {});
+      const participantResponse = await apiRequest("GET", `/api/participants/${sessionData.participantId}`);
       const participantData = await participantResponse.json();
       setParticipant(participantData);
       setCurrentBlockIndex(participantData.currentBlock || 0);
     },
-    onError: () => {
+    onError: (error) => {
+      console.error("Participation start error:", error);
       toast({
         title: "Error starting study",
-        description: "There was a problem starting the study. Please try again.",
+        description: `There was a problem starting the study: ${error.message}`,
         variant: "destructive"
       });
     }
@@ -290,6 +292,19 @@ export default function ParticipantView() {
             config={currentBlock}
             onResponse={handleTaskResponse}
             onComplete={handleTaskComplete}
+          />
+        );
+      
+      case "survey":
+      case "mcq":
+      case "likert":
+      case "openended":
+        return (
+          <SurveyTask
+            config={currentBlock}
+            onResponse={handleTaskResponse}
+            onComplete={handleTaskComplete}
+            participantId={participant?.id}
           />
         );
       

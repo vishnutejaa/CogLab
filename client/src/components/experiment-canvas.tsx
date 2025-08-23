@@ -17,6 +17,7 @@ interface ExperimentCanvasProps {
   onUpdateBlock: (blockId: string, updates: Partial<ExperimentBlock>) => void;
   onRemoveBlock: (blockId: string) => void;
   onReorderBlocks: (blocks: ExperimentBlock[]) => void;
+  onAddBlock: (blockType: string) => void;
 }
 
 function getBlockColor(type: string) {
@@ -31,6 +32,12 @@ function getBlockColor(type: string) {
       return "bg-purple-50 border-purple-200 text-purple-800";
     case "survey":
       return "bg-purple-50 border-purple-200 text-purple-800";
+    case "mcq":
+      return "bg-green-50 border-green-200 text-green-800";
+    case "likert":
+      return "bg-yellow-50 border-yellow-200 text-yellow-800";
+    case "openended":
+      return "bg-orange-50 border-orange-200 text-orange-800";
     case "instructions":
       return "bg-gray-50 border-gray-200 text-gray-800";
     case "debrief":
@@ -52,6 +59,12 @@ function getBlockIcon(type: string) {
       return "🖼️";
     case "survey":
       return "📝";
+    case "mcq":
+      return "✅";
+    case "likert":
+      return "⭐";
+    case "openended":
+      return "✏️";
     case "instructions":
       return "📖";
     case "debrief":
@@ -68,11 +81,17 @@ function getBlockDescription(block: ExperimentBlock) {
     case "demographics":
       return "Age, gender, education level";
     case "stroop":
-      return `${block.trials || 60} trials, ${block.duration ? block.duration/1000 : 5}s each`;
+      return `${block.trialCount || block.trials || 60} trials, ${block.duration ? block.duration/1000 : 5}s each`;
     case "image_recall":
-      return `${block.images || 20} images, memory assessment`;
+      return `${block.trialCount || block.images || 5} images, memory assessment`;
     case "survey":
-      return `${block.questions?.length || 5} questions, Likert scale`;
+      return `${block.questions?.length || 5} questions, mixed types`;
+    case "mcq":
+      return `${block.questions?.length || 1} multiple choice questions`;
+    case "likert":
+      return `${block.questions?.length || 1} Likert scale questions`;
+    case "openended":
+      return `${block.questions?.length || 1} open-ended questions`;
     case "instructions":
       return "Task instructions and guidance";
     case "debrief":
@@ -88,7 +107,8 @@ export default function ExperimentCanvas({
   onSelectBlock,
   onUpdateBlock,
   onRemoveBlock,
-  onReorderBlocks
+  onReorderBlocks,
+  onAddBlock
 }: ExperimentCanvasProps) {
   const [draggedBlock, setDraggedBlock] = useState<ExperimentBlock | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
@@ -111,6 +131,15 @@ export default function ExperimentCanvas({
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     setDragOverIndex(null);
+    
+    // Check if this is a new component from the palette
+    const componentType = e.dataTransfer.getData("text/plain");
+    
+    if (componentType && !draggedBlock) {
+      // This is a new component from the palette
+      onAddBlock(componentType);
+      return;
+    }
     
     if (!draggedBlock) return;
     
