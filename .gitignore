@@ -6,3 +6,4 @@ vite.config.ts.*
 *.tar.gz
 AI_SETUP.md
 README_AI_INTEGRATION.md
+.env
