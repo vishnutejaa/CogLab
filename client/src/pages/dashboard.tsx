@@ -117,13 +117,21 @@ export default function Dashboard() {
                 <button className="text-primary font-medium border-b-2 border-primary pb-1" data-testid="nav-dashboard">
                   Dashboard
                 </button>
-                <button className="text-gray-600 hover:text-gray-900 pb-1" data-testid="nav-studies">
+                <button 
+                  onClick={() => setLocation("/studies")}
+                  className="text-gray-600 hover:text-gray-900 pb-1" 
+                  data-testid="nav-studies"
+                >
                   Studies
                 </button>
                 <button className="text-gray-600 hover:text-gray-900 pb-1" data-testid="nav-templates">
                   Templates
                 </button>
-                <button className="text-gray-600 hover:text-gray-900 pb-1" data-testid="nav-data">
+                <button 
+                  onClick={() => setLocation("/data")}
+                  className="text-gray-600 hover:text-gray-900 pb-1" 
+                  data-testid="nav-data"
+                >
                   Data
                 </button>
               </nav>
