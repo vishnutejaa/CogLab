@@ -1,8 +1,8 @@
-# CogResearcher 🧠🔬
+# CogLab 🧠🔬
 
 A comprehensive cognitive research platform that empowers researchers to design, conduct, and analyze psychological experiments with unprecedented ease and flexibility.
 
-## 🌟 What is CogResearcher?
+## 🌟 What is CogLab?
 
 CogResearcher is a modern, web-based platform that revolutionizes how cognitive psychology research is conducted. It combines the power of AI-assisted experiment design with a drag-and-drop interface, making it possible for researchers of all technical levels to create sophisticated psychological studies in minutes rather than months.
 
@@ -26,7 +26,7 @@ Imagine Dr. Sarah Chen, a brilliant cognitive psychologist who just discovered a
 - **Day 3**: Drag and drop components to customize the study
 - **Day 4**: Deploy and start collecting data immediately
 
-**That's the power of CogResearcher.**
+**That's the power of CogLab.**
 
 Traditional cognitive research requires:
 - **Complex programming** in specialized languages (E-Prime, PsychoPy, MATLAB)
